@@ -1,5 +1,5 @@
 # provide a name if you wish
-# name: btlz-test
+name: btlz-test
 
 networks:
   postgres-net:
@@ -51,6 +51,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
+    env_file:
+      - .env
 
     environment:
       POSTGRES_HOST: postgres

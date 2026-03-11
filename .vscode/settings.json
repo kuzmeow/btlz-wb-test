@@ -10,5 +10,13 @@
     "[json]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "prettier.requireConfig": true
+    "prettier.requireConfig": true,
+    "eslint.validate": [
+        "typescript"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.format.enable": true,
+    "eslint.run": "onType"
 }
