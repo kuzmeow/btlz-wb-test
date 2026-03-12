@@ -1,7 +1,7 @@
 import env from "#config/env/env.js";
 import { z } from "zod";
 import { WbBoxTariffsResponseSchema } from "./schema.js";
-import { Tariffs } from "#modules/tariffs/schema.js";
+import { Tariff } from "#modules/tariff/schema.js";
 
 class WbApiService {
     constructor(
@@ -9,12 +9,15 @@ class WbApiService {
         private readonly baseUrl: string,
     ) {}
 
-    async getBoxTariffs(date: Date): Promise<Tariffs> {
+    async getBoxTariffs(date: Date): Promise<Tariff> {
         const url = new URL(`${this.baseUrl}/api/v1/tariffs/box`);
         url.searchParams.append("date", this.formatDate(date));
 
         const response = await fetch(url.toString(), {
-            headers: { "Authorization": this.apiKey, "Content-Type": "application/json" },
+            headers: {
+                "Authorization": this.apiKey,
+                "Content-Type": "application/json",
+            },
         });
         if (!response.ok) {
             const errorText = await response.text();
@@ -35,7 +38,7 @@ class WbApiService {
         }
     }
 
-    async getYesterdayTariffs(): Promise<Tariffs> {
+    async getYesterdayTariffs(): Promise<Tariff> {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         return this.getBoxTariffs(yesterday);

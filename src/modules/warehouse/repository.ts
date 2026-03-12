@@ -1,34 +1,35 @@
 import { toSnakeCase } from "#infra/caseConvertors/toSnakeCase.js";
 import knex from "#postgres/knex.js";
 import { z } from "zod";
-import { TABLE_NAME, WarehouseEntity, WarehouseEntitySchema } from "./entity.js";
+import { WAREHOUSES_TABLE_NAME, WAREHOUSE_PG_TYPES, WarehouseEntity, WarehouseEntitySchema } from "./entity.js";
 import { Warehouse } from "./schema.js";
 import { toCamelCase } from "#infra/caseConvertors/toCamelCase.js";
+import { batchUpdate } from "#infra/knex/batchUpdate.js";
 
 export class WarehouseRepository {
-    async create(data: Warehouse): Promise<WarehouseEntity> {
-        const [created] = await knex(TABLE_NAME)
-            .insert({ ...toSnakeCase(data) })
+    async create(tariffId: string, data: Warehouse): Promise<WarehouseEntity> {
+        const [created] = await knex(WAREHOUSES_TABLE_NAME)
+            .insert(toSnakeCase({ ...data, tariffId }))
             .returning("*");
 
         return this.validateOne(created);
     }
 
-    async createMany(data: Warehouse[]): Promise<WarehouseEntity[]> {
+    async createMany(tariffId: string, data: Warehouse[]): Promise<WarehouseEntity[]> {
         if (data.length === 0) return [];
 
-        const records = data.map((item) => ({ ...toSnakeCase(item) }));
+        const records = data.map((item) => toSnakeCase({ ...item, tariffId }));
 
-        const created = await knex(TABLE_NAME).insert(records).returning("*");
+        const created = await knex(WAREHOUSES_TABLE_NAME).insert(records).returning("*");
 
         return this.validateMany(created);
     }
 
     async save(data: WarehouseEntity): Promise<WarehouseEntity> {
-        const [updated] = await knex(TABLE_NAME)
+        const [updated] = await knex(WAREHOUSES_TABLE_NAME)
             .where({ id: data.id })
             .update({
-                ...toSnakeCase({ ...data }),
+                ...toSnakeCase(data),
                 updated_at: knex.fn.now(),
             })
             .returning("*");
@@ -43,31 +44,28 @@ export class WarehouseRepository {
     async saveMany(data: WarehouseEntity[]): Promise<WarehouseEntity[]> {
         if (data.length === 0) return [];
 
-        const results: WarehouseEntity[] = [];
+        return knex.transaction(async (trx) => {
+            const snakeData = data.map((item) => toSnakeCase(item));
 
-        await knex.transaction(async (trx) => {
-            for (const item of data) {
-                const [updated] = await trx(TABLE_NAME)
-                    .where({ id: item.id })
-                    .update({
-                        ...toSnakeCase(item),
-                        updated_at: trx.fn.now(),
-                    })
-                    .returning("*");
+            const results = await batchUpdate(trx, {
+                tableName: WAREHOUSES_TABLE_NAME,
+                data: snakeData,
+                idField: "id",
+                pgTypes: WAREHOUSE_PG_TYPES,
+            });
 
-                if (!updated) {
-                    throw new Error(`Warehouse with id ${item.id} not found during batch save`);
-                }
-
-                results.push(this.validateOne(updated));
+            if (results.length !== data.length) {
+                const updatedIds = new Set(results.map((r) => r.id));
+                const missingIds = data.map((item) => item.id).filter((id) => !updatedIds.has(id));
+                throw new Error(`Failed to update warehouses: ${missingIds.join(", ")}`);
             }
-        });
 
-        return results;
+            return this.validateMany(results);
+        });
     }
 
     async delete(condition: Partial<WarehouseEntity>): Promise<number> {
-        const query = knex(TABLE_NAME);
+        const query = knex(WAREHOUSES_TABLE_NAME);
 
         Object.entries(toSnakeCase(condition)).forEach(([key, value]) => {
             if (value !== undefined) {
@@ -88,13 +86,13 @@ export class WarehouseRepository {
     async deleteManyByIds(ids: string[]): Promise<number> {
         if (ids.length === 0) return 0;
 
-        const deletedCount = await knex(TABLE_NAME).whereIn("id", ids).del();
+        const deletedCount = await knex(WAREHOUSES_TABLE_NAME).whereIn("id", ids).del();
 
         return deletedCount;
     }
 
     async getOne(condition: Partial<WarehouseEntity>): Promise<WarehouseEntity | null> {
-        const query = knex(TABLE_NAME);
+        const query = knex(WAREHOUSES_TABLE_NAME);
 
         Object.entries(toSnakeCase(condition)).forEach(([key, value]) => {
             if (value !== undefined) {
@@ -119,7 +117,7 @@ export class WarehouseRepository {
             orderDirection?: "asc" | "desc";
         } = {},
     ): Promise<WarehouseEntity[]> {
-        const query = knex(TABLE_NAME);
+        const query = knex(WAREHOUSES_TABLE_NAME);
 
         Object.entries(toSnakeCase(condition)).forEach(([key, value]) => {
             if (value !== undefined) {
@@ -142,7 +140,7 @@ export class WarehouseRepository {
     async getManyByIds(ids: string[]): Promise<WarehouseEntity[]> {
         if (ids.length === 0) return [];
 
-        const records = await knex(TABLE_NAME).whereIn("id", ids).orderBy("id");
+        const records = await knex(WAREHOUSES_TABLE_NAME).whereIn("id", ids).orderBy("id");
 
         return this.validateMany(records);
     }

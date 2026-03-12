@@ -1,11 +1,11 @@
-import { TABLE_NAME } from "#modules/warehouse/entity.js";
+import { WAREHOUSES_TABLE_NAME } from "#modules/warehouse/entity.js";
 
 /**
  * @param {import("knex").Knex} knex
  * @returns {Promise<void>}
  */
 export async function up(knex) {
-    return knex.schema.createTable(TABLE_NAME, (table) => {
+    return knex.schema.createTable(WAREHOUSES_TABLE_NAME, (table) => {
         table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
 
         table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
@@ -32,5 +32,5 @@ export async function up(knex) {
  * @returns {Promise<void>}
  */
 export async function down(knex) {
-    return knex.schema.dropTable(TABLE_NAME);
+    return knex.schema.dropTable(WAREHOUSES_TABLE_NAME);
 }
