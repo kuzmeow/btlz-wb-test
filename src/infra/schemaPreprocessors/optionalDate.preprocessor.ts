@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const optionalDate = () =>
     z.preprocess((val) => {
-        if (val === "" || val === null || val === undefined) return undefined;
+        if (val === "" || val === undefined) return null;
 
         if (typeof val === "string") {
             const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -13,4 +13,4 @@ export const optionalDate = () =>
         }
 
         return val;
-    }, z.date().optional());
+    }, z.date().nullable());

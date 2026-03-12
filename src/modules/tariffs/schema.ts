@@ -2,10 +2,10 @@ import { optionalDate } from "#infra/schemaPreprocessors/optionalDate.preprocess
 import { WarehouseSchema } from "#modules/warehouse/schema.js";
 import { z } from "zod";
 
-export const BoxTariffsSchema = z.object({
+export const TariffsSchema = z.object({
     dtNextBox: optionalDate(),
     dtTillMax: optionalDate(),
     warehouseList: z.array(WarehouseSchema),
 });
 
-export type BoxTariffs = z.infer<typeof BoxTariffsSchema>;
+export type Tariffs = z.infer<typeof TariffsSchema>;
