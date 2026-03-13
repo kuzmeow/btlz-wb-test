@@ -16,21 +16,14 @@ export async function batchUpdate(trx: Knex.Transaction, config: BatchUpdateConf
 
     const fieldsToUpdate =
         updateFields ?? Object.keys(pgTypes).filter((key) => ![idField, "created_at", "updated_at"].includes(key));
-
     const filteredFields = fieldsToUpdate.filter((f) => !excludeFields.includes(f));
-
     const ids = data.map((item) => item[idField]);
-
     const fieldArrays = filteredFields.map((field) => data.map((item) => item[field]));
-
     const setClause = filteredFields.map((field) => `${field} = u.${field}`).join(",\n            ");
-
     const unnestColumns = filteredFields.map((field) => `?::${pgTypes[field] || "text"}[]`).join(",\n                ");
-
     const unnestAliases = filteredFields.join(", ");
 
-    const result = await trx.raw(
-        `
+    const sql = `
         UPDATE ${tableName} w
         SET
             ${setClause},
@@ -43,9 +36,9 @@ export async function batchUpdate(trx: Knex.Transaction, config: BatchUpdateConf
         ) u
         WHERE w.${idField} = u.${idField}
         RETURNING w.*
-        `,
-        [ids, ...fieldArrays],
-    );
+        `;
+
+    const result = await trx.raw(sql, [ids, ...fieldArrays]);
 
     return result.rows;
 }

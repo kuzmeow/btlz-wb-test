@@ -1,12 +1,12 @@
 import { getFieldDescriptions } from "#infra/schema/field/getDescriptions.js";
-import { optionalDate } from "#infra/schema/field/preprocessors/optionalDate.js";
+import { nullableDate } from "#infra/schema/field/preprocessors/nullableDate.js";
 import { TariffEntitySchema } from "#modules/tariff/entity.js";
 import { WarehouseSchema } from "#modules/warehouse/schema.js";
 import { z } from "zod";
 
 export const SheetSchema = z.object({
     spreadsheetId: z.string(),
-    tariffDate: optionalDate(),
+    tariffDate: nullableDate(),
     tariffId: z.string().uuid(),
 });
 

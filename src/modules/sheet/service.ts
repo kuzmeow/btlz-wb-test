@@ -16,19 +16,25 @@ export class SheetService {
         private readonly sheetName: string,
     ) {}
 
-    async create(spreadsheetId: string, tariffDate: Date, tariffId: string): Promise<SheetEntity> {
-        return await this.rep.create({ spreadsheetId, tariffDate, tariffId });
+    async create(spreadsheetId: string, tariffId: string, tariffDate?: Date): Promise<SheetEntity> {
+        return await this.rep.create({ spreadsheetId, tariffDate: tariffDate ?? null, tariffId });
     }
 
-    async registerSpreadsheet(spreadsheetId: string, tariffDate: Date, tariffId: string): Promise<SheetEntity> {
+    async save(sheet: SheetEntity) {
+        await this.rep.save(sheet);
+    }
+
+    async registerSpreadsheet(spreadsheetId: string, tariffId: string, tariffDate?: Date): Promise<SheetEntity> {
         const existingSheet = await this.rep.getOne({ spreadsheetId });
 
         if (existingSheet) {
-            if (existingSheet.tariffDate !== tariffDate) return await this.rep.save({ ...existingSheet, tariffDate });
+            existingSheet.tariffId = tariffId;
+            existingSheet.tariffDate = tariffDate ?? null;
+            await this.rep.save({ ...existingSheet, tariffDate: tariffDate ?? null });
             return existingSheet;
         }
 
-        return await this.create(spreadsheetId, tariffDate, tariffId);
+        return await this.create(spreadsheetId, tariffId, tariffDate);
     }
 
     async updateSpreadsheet(sheet: SheetEntity, tariff: TariffEntity): Promise<SheetEntity> {
@@ -81,6 +87,10 @@ export class SheetService {
 
     async getManyForTariff(tariffId: string): Promise<SheetEntity[]> {
         return await this.rep.getMany({ tariffId });
+    }
+
+    async getManyOutdatedCurrent(currentTariffId: string) {
+        return await this.rep.getMany({ tariffDate: null }, { exclude: { tariffId: currentTariffId } });
     }
 
     private buildDataRow<T extends Record<string, any>>(schema: z.ZodObject<any>, data: T): string[] {
