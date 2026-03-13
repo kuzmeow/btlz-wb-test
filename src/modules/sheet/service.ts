@@ -239,7 +239,6 @@ export class SheetService {
                                     endColumnIndex: config.warehouseCols,
                                 },
                                 top: { style: "SOLID" },
-                                bottom: { style: "SOLID" },
                                 left: { style: "SOLID" },
                                 right: { style: "SOLID" },
                                 innerVertical: { style: "SOLID" },
