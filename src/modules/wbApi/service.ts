@@ -3,13 +3,13 @@ import { z } from "zod";
 import { WbBoxTariffsResponseSchema } from "./schema.js";
 import { Tariff } from "#modules/tariff/schema.js";
 
-class WbApiService {
+export class WbApiService {
     constructor(
         private readonly apiKey: string,
         private readonly baseUrl: string,
     ) {}
 
-    async getBoxTariffs(date: Date): Promise<Tariff> {
+    async getBoxTariff(date: Date): Promise<Tariff> {
         const url = new URL(`${this.baseUrl}/api/v1/tariffs/box`);
         url.searchParams.append("date", this.formatDate(date));
 
@@ -38,10 +38,10 @@ class WbApiService {
         }
     }
 
-    async getYesterdayTariffs(): Promise<Tariff> {
+    async getYesterdayTariff(): Promise<Tariff> {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        return this.getBoxTariffs(yesterday);
+        return this.getBoxTariff(yesterday);
     }
 
     private formatDate(date: Date): string {

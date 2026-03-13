@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const optionalNumber = () =>
+export const nullableNumber = () =>
     z.preprocess((val) => {
         if (val === "-" || val === undefined) return null;
 

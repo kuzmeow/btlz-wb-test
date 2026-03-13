@@ -12,16 +12,17 @@ export class TariffRepository {
     async create(data: Tariff, fetchDate: Date): Promise<TariffEntity> {
         const { warehouseList: _, ...rest } = data;
         const [created] = await knex(TARIFFS_TABLE_NAME)
-            .insert(toSnakeCase({ ...rest, lastFetchDate: fetchDate }))
+            .insert(toSnakeCase({ ...rest, fetchDate: fetchDate }))
             .returning("*");
         return this.validateOne(created);
     }
 
     async save(data: TariffEntity): Promise<TariffEntity> {
+        const { warehouses: _, ...rest } = data;
         const [updated] = await knex(TARIFFS_TABLE_NAME)
             .where({ id: data.id })
             .update({
-                ...toSnakeCase({ ...data, warehouses: undefined }),
+                ...toSnakeCase(rest),
                 updated_at: knex.fn.now(),
             })
             .returning("*");
@@ -50,9 +51,9 @@ export class TariffRepository {
         return tariff;
     }
 
-    private validateOne(record: unknown): TariffEntity {
+    private validateOne(record: Record<string, any>): TariffEntity {
         try {
-            return TariffEntitySchema.parse(toCamelCase(record as Record<string, any>));
+            return TariffEntitySchema.parse(toCamelCase(record));
         } catch (error) {
             if (error instanceof z.ZodError) {
                 throw new Error(`TariffEntity validation failed:\n${error}`);

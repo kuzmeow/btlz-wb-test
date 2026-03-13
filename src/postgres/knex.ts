@@ -6,10 +6,16 @@ export default knex;
 
 function logMigrationResults(action: string, result: [number, string[]]) {
     if (result[1].length === 0) {
-        console.log(["latest", "up"].includes(action) ? "All migrations are up to date" : "All migrations have been rolled back");
+        console.log(
+            ["latest", "up"].includes(action)
+                ? "All migrations are up to date"
+                : "All migrations have been rolled back",
+        );
         return;
     }
-    console.log(`Batch ${result[0]} ${["latest", "up"].includes(action) ? "ran" : "rolled back"} the following migrations:`);
+    console.log(
+        `Batch ${result[0]} ${["latest", "up"].includes(action) ? "ran" : "rolled back"} the following migrations:`,
+    );
     for (const migration of result[1]) {
         console.log("- " + migration);
     }

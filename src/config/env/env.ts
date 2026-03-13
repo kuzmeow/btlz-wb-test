@@ -22,6 +22,8 @@ const envSchema = z.object({
 
     WB_BASE_URL: z.union([z.undefined(), z.string()]),
     WB_API_KEY: z.string(),
+
+    SHEET_NAME: z.string(),
 });
 
 const env = envSchema.parse(process.env);

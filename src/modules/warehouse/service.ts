@@ -24,7 +24,7 @@ export class WarehouseService {
     }
 
     async getManyForTariff(tariffId: string): Promise<WarehouseEntity[]> {
-        return await this.rep.getManyWhere({ tariffId });
+        return await this.rep.getMany({ tariffId });
     }
 }
 
