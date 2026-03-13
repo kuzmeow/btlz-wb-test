@@ -1,5 +1,6 @@
-import { WarehouseEntity } from "./entity.js";
-import { WarehouseRepository, warehouseRepository } from "./repository.js";
+import type { WarehouseRepository } from "./repository.js";
+import type { WarehouseEntity } from "./entity.js";
+import { warehouseRepository } from "./repository.js";
 import { Warehouse } from "./schema.js";
 
 export class WarehouseService {

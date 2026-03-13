@@ -42,6 +42,31 @@ export class SheetRepository {
         return record ? this.validateOne(record) : null;
     }
 
+    async getMany(
+        condition: Partial<SheetEntity> = {},
+        options: {
+            limit?: number;
+            offset?: number;
+            orderBy?: string;
+            orderDirection?: "asc" | "desc";
+        } = {},
+    ): Promise<SheetEntity[]> {
+        const query = knex(SHEETS_TABLE_NAME);
+
+        Object.entries(toSnakeCase(condition)).forEach(([key, value]) => {
+            if (value !== undefined) {
+                query.where(key, value);
+            }
+        });
+
+        if (options.limit) query.limit(options.limit);
+        if (options.offset) query.offset(options.offset);
+        if (options.orderBy) query.orderBy(options.orderBy, options.orderDirection || "asc");
+
+        const records = await query;
+        return this.validateMany(records);
+    }
+
     async delete(condition: Partial<SheetEntity>): Promise<number> {
         const query = knex(SHEETS_TABLE_NAME);
 
@@ -64,6 +89,10 @@ export class SheetRepository {
             }
             throw error;
         }
+    }
+
+    private validateMany(records: Record<string, any>[]): SheetEntity[] {
+        return records.map((record) => this.validateOne(record));
     }
 }
 

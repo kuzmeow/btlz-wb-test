@@ -1,9 +1,10 @@
+import type { WarehouseService } from "#modules/warehouse/service.js";
 import { toCamelCase } from "#infra/caseConvertors/toCamelCase.js";
 import { toSnakeCase } from "#infra/caseConvertors/toSnakeCase.js";
 import knex from "#postgres/knex.js";
 import { z } from "zod";
 import { TariffEntity, TariffEntitySchema, TARIFFS_TABLE_NAME } from "./entity.js";
-import { WarehouseService, warehouseService } from "#modules/warehouse/service.js";
+import { warehouseService } from "#modules/warehouse/service.js";
 import { Tariff } from "./schema.js";
 
 export class TariffRepository {

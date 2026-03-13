@@ -24,6 +24,8 @@ const envSchema = z.object({
     WB_API_KEY: z.string(),
 
     SHEET_NAME: z.string(),
+
+    CRON_UPDATE_TARIFFS: z.string(),
 });
 
 const env = envSchema.parse(process.env);
