@@ -71,3 +71,8 @@ npm run spreadsheets:dev register spreadsheet_id -- --tariff-date YYYY-MM-DD
 Чтобы сервис мог работать с googleapis и googleSheets необходимо включить для проекта Google Сloud Google Sheets API https://console.cloud.google.com/apis/api/sheets.googleapis.com
 После этого создать Service Account и добавить его как editor в ваш spreadsheet
 Так же необходимо занести свои credentials в google-credentials.json, пример его содержания можно найти в example.google-credentials.json
+
+Для удаления таблицы с spreadsheet_id:
+```bash
+npm run spreadsheets:dev unregister spreadsheet_id
+```
