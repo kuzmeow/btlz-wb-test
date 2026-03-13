@@ -63,6 +63,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PORT: ${APP_PORT}
       NODE_ENV: production
+      GOOGLE_APPLICATION_CREDENTIALS: "/app/google-credentials.json"
+
+    volumes:
+      - ./google-credentials.json:/app/google-credentials.json:ro
 
     ports:
       - ${APP_PORT}:${APP_PORT}

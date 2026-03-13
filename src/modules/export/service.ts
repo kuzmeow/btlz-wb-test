@@ -13,7 +13,7 @@ export class ExportService {
     async registerAndUpdateSpreadsheet(spreadsheetId: string, tariffDate?: Date) {
         const fetchDate = tariffDate ?? new Date();
         const tariff = await this.tariffService.getOneAndUpdateByFetchDate(fetchDate);
-        await this.sheetService.registerSpreadsheet(spreadsheetId, fetchDate, tariff.id);
+        await this.sheetService.registerSpreadsheet(spreadsheetId, tariff.id, tariffDate);
         await this.updateAllSheetsForTariff(tariff);
     }
 
@@ -47,6 +47,17 @@ export class ExportService {
 
     async fullUpdateForDate(fetchDate?: Date) {
         const tariff = await this.tariffService.getOneAndUpdateByFetchDate(fetchDate);
+
+        if (!fetchDate) {
+            const sheetsForCurrent = await this.sheetService.getManyOutdatedCurrent(tariff.id);
+            await Promise.all(
+                sheetsForCurrent.map(async (s) => {
+                    s.tariffId = tariff.id;
+                    await this.sheetService.save(s);
+                }),
+            );
+        }
+
         await this.updateAllSheetsForTariff(tariff);
     }
 }

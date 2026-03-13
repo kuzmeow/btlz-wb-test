@@ -26,6 +26,8 @@ const envSchema = z.object({
     SHEET_NAME: z.string(),
 
     CRON_UPDATE_TARIFFS: z.string(),
+
+    GOOGLE_APPLICATION_CREDENTIALS: z.string().default("google-credentials.json"),
 });
 
 const env = envSchema.parse(process.env);

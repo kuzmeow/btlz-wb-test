@@ -7,9 +7,7 @@ import { Sheet } from "./schema.js";
 
 export class SheetRepository {
     async create(data: Sheet): Promise<SheetEntity> {
-        const [created] = await knex(SHEETS_TABLE_NAME)
-            .insert(toSnakeCase({ ...data }))
-            .returning("*");
+        const [created] = await knex(SHEETS_TABLE_NAME).insert(toSnakeCase(data)).returning("*");
         return this.validateOne(created);
     }
 
@@ -49,6 +47,7 @@ export class SheetRepository {
             offset?: number;
             orderBy?: string;
             orderDirection?: "asc" | "desc";
+            exclude?: Partial<SheetEntity>;
         } = {},
     ): Promise<SheetEntity[]> {
         const query = knex(SHEETS_TABLE_NAME);
@@ -59,6 +58,13 @@ export class SheetRepository {
             }
         });
 
+        if (options.exclude) {
+            Object.entries(toSnakeCase(options.exclude)).forEach(([key, value]) => {
+                if (value !== undefined) {
+                    query.whereNot(key, value);
+                }
+            });
+        }
         if (options.limit) query.limit(options.limit);
         if (options.offset) query.offset(options.offset);
         if (options.orderBy) query.orderBy(options.orderBy, options.orderDirection || "asc");

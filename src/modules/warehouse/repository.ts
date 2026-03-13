@@ -20,7 +20,10 @@ export class WarehouseRepository {
 
         const records = data.map((item) => toSnakeCase({ ...item, tariffId }));
 
-        const created = await knex(WAREHOUSES_TABLE_NAME).insert(records).returning("*");
+        const created = await knex(WAREHOUSES_TABLE_NAME)
+            .insert(records)
+            .orderBy("box_delivery_coef_expr", "asc")
+            .returning("*");
 
         return this.validateMany(created);
     }
@@ -60,7 +63,15 @@ export class WarehouseRepository {
                 throw new Error(`Failed to update warehouses: ${missingIds.join(", ")}`);
             }
 
-            return this.validateMany(results);
+            const warehouses = this.validateMany(results);
+            const sortedData = [...warehouses].sort((a, b) => {
+                if (a.boxDeliveryCoefExpr === null && b.boxDeliveryCoefExpr === null) return 0;
+                if (a.boxDeliveryCoefExpr === null) return 1;
+                if (b.boxDeliveryCoefExpr === null) return -1;
+
+                return a.boxDeliveryCoefExpr - b.boxDeliveryCoefExpr;
+            });
+            return sortedData;
         });
     }
 
@@ -99,7 +110,7 @@ export class WarehouseRepository {
         if (options.orderBy) {
             query.orderBy(options.orderBy, options.orderDirection || "asc");
         } else {
-            query.orderBy("id", "asc");
+            query.orderBy("box_delivery_coef_expr", "asc");
         }
 
         const records = await query;
