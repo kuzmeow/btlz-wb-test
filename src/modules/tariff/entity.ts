@@ -6,7 +6,7 @@ import { WarehouseEntitySchema } from "#modules/warehouse/entity.js";
 export const TARIFFS_TABLE_NAME = "tariffs";
 
 export const TariffEntitySchema = BaseEntitySchema.merge(TariffSchema.omit({ warehouseList: true })).extend({
-    lastFetchDate: z.date(),
+    fetchDate: z.date().describe("Дата тарифа"),
     warehouses: z.array(z.lazy(() => WarehouseEntitySchema)).optional(),
 });
 

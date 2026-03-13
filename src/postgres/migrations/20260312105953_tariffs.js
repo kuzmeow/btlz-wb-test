@@ -14,9 +14,9 @@ export async function up(knex) {
         table.date("dt_next_box").nullable();
         table.date("dt_till_max").nullable();
 
-        table.date("last_fetch_date");
+        table.date("fetch_date");
 
-        table.index("last_fetch_date");
+        table.index("fetch_date");
     });
 }
 

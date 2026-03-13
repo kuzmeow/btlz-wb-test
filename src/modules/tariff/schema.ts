@@ -1,10 +1,10 @@
-import { optionalDate } from "#infra/schemaPreprocessors/optionalDate.preprocessor.js";
+import { nullableDate } from "#infra/schema/field/preprocessors/nullableDate.js";
 import { WarehouseSchema } from "#modules/warehouse/schema.js";
 import { z } from "zod";
 
 export const TariffSchema = z.object({
-    dtNextBox: optionalDate(),
-    dtTillMax: optionalDate(),
+    dtNextBox: nullableDate().describe("След. тариф"),
+    dtTillMax: nullableDate().describe("Конец актуального тарифа"),
     warehouseList: z.array(WarehouseSchema),
 });
 

@@ -77,38 +77,7 @@ export class WarehouseRepository {
         return deletedCount;
     }
 
-    async deleteById(id: string): Promise<boolean> {
-        const deletedCount = await this.delete({ id });
-
-        return deletedCount > 0;
-    }
-
-    async deleteManyByIds(ids: string[]): Promise<number> {
-        if (ids.length === 0) return 0;
-
-        const deletedCount = await knex(WAREHOUSES_TABLE_NAME).whereIn("id", ids).del();
-
-        return deletedCount;
-    }
-
-    async getOne(condition: Partial<WarehouseEntity>): Promise<WarehouseEntity | null> {
-        const query = knex(WAREHOUSES_TABLE_NAME);
-
-        Object.entries(toSnakeCase(condition)).forEach(([key, value]) => {
-            if (value !== undefined) {
-                query.where(key, value);
-            }
-        });
-
-        const record = await query.first();
-        return record ? this.validateOne(record) : null;
-    }
-
-    async getOneById(id: string): Promise<WarehouseEntity | null> {
-        return await this.getOne({ id });
-    }
-
-    async getManyWhere(
+    async getMany(
         condition: Partial<WarehouseEntity> = {},
         options: {
             limit?: number;
@@ -137,17 +106,9 @@ export class WarehouseRepository {
         return this.validateMany(records);
     }
 
-    async getManyByIds(ids: string[]): Promise<WarehouseEntity[]> {
-        if (ids.length === 0) return [];
-
-        const records = await knex(WAREHOUSES_TABLE_NAME).whereIn("id", ids).orderBy("id");
-
-        return this.validateMany(records);
-    }
-
-    private validateOne(record: unknown): WarehouseEntity {
+    private validateOne(record: Record<string, any>): WarehouseEntity {
         try {
-            return WarehouseEntitySchema.parse(toCamelCase(record as Record<string, any>));
+            return WarehouseEntitySchema.parse(toCamelCase(record));
         } catch (error) {
             if (error instanceof z.ZodError) {
                 throw new Error(`WarehouseEntity validation failed:\n${error}`);
@@ -156,7 +117,7 @@ export class WarehouseRepository {
         }
     }
 
-    private validateMany(records: unknown[]): WarehouseEntity[] {
+    private validateMany(records: Record<string, any>[]): WarehouseEntity[] {
         return records.map((record) => this.validateOne(record));
     }
 }
