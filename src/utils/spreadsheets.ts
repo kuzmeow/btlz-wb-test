@@ -1,3 +1,4 @@
+import { exportService } from "#modules/export/service.js";
 import { sheetService } from "#modules/sheet/service.js";
 import { Command } from "commander";
 const program = new Command();
@@ -11,7 +12,7 @@ program
         console.log(`   Tariff date: ${options.tariffDate}`);
 
         const tariffDate = options.tariffDate ? new Date(options.tariffDate) : undefined;
-        await sheetService.registerSpredsheet(spreadsheetId, tariffDate);
+        await exportService.registerAndUpdateSpreadsheet(spreadsheetId, tariffDate);
 
         console.log("Spreadsheet registered successfully");
 

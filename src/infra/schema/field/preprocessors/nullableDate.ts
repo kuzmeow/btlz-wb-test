@@ -12,5 +12,9 @@ export const nullableDate = () =>
             }
         }
 
+        // if (val instanceof Date) {
+        //     console.log(new Date.UTC(val.getFullYear(), val.getMonth(), val.getDate()));
+        // }
+
         return val;
     }, z.date().nullable());

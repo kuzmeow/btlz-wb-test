@@ -1,48 +1,42 @@
+import type { SheetRepository } from "./repository.js";
+import type { SheetEntity } from "./entity.js";
+import type { TariffEntity } from "#modules/tariff/entity.js";
 import { sheets } from "#config/google/sheets.js";
 import { sheets_v4 } from "googleapis";
-import { sheetRepository, SheetRepository } from "./repository.js";
-import { SheetEntity } from "./entity.js";
-import { tariffService, TariffService } from "#modules/tariff/service.js";
-import { TariffEntity } from "#modules/tariff/entity.js";
+import { sheetRepository } from "./repository.js";
 import env from "#config/env/env.js";
 import { sheetTariffDesc, SheetTariffSchema, sheetWarehouseDesc, SheetWarehouseSchema } from "./schema.js";
 import { z } from "zod";
 import { GaxiosResponse } from "gaxios";
 
-class SheetService {
+export class SheetService {
     constructor(
         private readonly rep: SheetRepository,
         private readonly sheets: sheets_v4.Sheets,
         private readonly sheetName: string,
-        private readonly tariffService: TariffService,
     ) {}
 
-    async create(spreadsheetId: string, tariffDate?: Date): Promise<{ sheet: SheetEntity; tariff: TariffEntity }> {
-        const fetchDate = tariffDate ? tariffDate : new Date();
-        const tariff = await this.tariffService.getOneAndUpdateByFetchDate(fetchDate);
-        return { sheet: await this.rep.create({ spreadsheetId, tariffDate, tariffId: tariff.id }), tariff };
+    async create(spreadsheetId: string, tariffDate: Date, tariffId: string): Promise<SheetEntity> {
+        return await this.rep.create({ spreadsheetId, tariffDate, tariffId });
     }
 
-    async registerSpredsheet(spreadsheetId: string, tariffDate?: Date): Promise<SheetEntity> {
+    async registerSpreadsheet(spreadsheetId: string, tariffDate: Date, tariffId: string): Promise<SheetEntity> {
         const existingSheet = await this.rep.getOne({ spreadsheetId });
-        const { sheet, tariff } = existingSheet
-            ? { sheet: existingSheet, tariff: undefined }
-            : await this.create(spreadsheetId, tariffDate);
 
-        return await this.updateSpreadsheet(sheet, tariff);
+        if (existingSheet) {
+            if (existingSheet.tariffDate !== tariffDate) return await this.rep.save({ ...existingSheet, tariffDate });
+            return existingSheet;
+        }
+
+        return await this.create(spreadsheetId, tariffDate, tariffId);
     }
 
-    async unregisterSpreadsheet(spreadsheetId: string) {
-        await this.rep.delete({ spreadsheetId });
-    }
-
-    async updateSpreadsheet(sheet: SheetEntity, data?: TariffEntity): Promise<SheetEntity> {
+    async updateSpreadsheet(sheet: SheetEntity, tariff: TariffEntity): Promise<SheetEntity> {
         await this.ensureSheetExists(sheet.spreadsheetId);
 
-        const tariff = data ? data : await this.tariffService.getOneAndUpdateByFetchDate(sheet.tariffDate);
-
-        if (tariff.warehouses === undefined)
+        if (tariff.warehouses === undefined) {
             throw new Error("TariffEntity is not populated with warehouses. Cannot build SpreadSheet data row");
+        }
 
         const tariffHeadersRow = Object.values(sheetTariffDesc);
         const tariffDataRow = this.buildDataRow(SheetTariffSchema, tariff);
@@ -60,7 +54,6 @@ class SheetService {
         const row5 = warehouseHeadersRow;
 
         const allRows = [row1, row2, row3, row4, row5, ...warehouseDataRows];
-
         const maxColLetter = this.colIndexToLetter(row5.length);
 
         await this.sheets.spreadsheets.values.update(
@@ -68,9 +61,7 @@ class SheetService {
                 spreadsheetId: sheet.spreadsheetId,
                 range: `${this.sheetName}!A1:${maxColLetter}${allRows.length}`,
                 valueInputOption: "USER_ENTERED",
-                requestBody: {
-                    values: allRows,
-                },
+                requestBody: { values: allRows },
             },
             { responseType: "stream" },
         );
@@ -82,6 +73,14 @@ class SheetService {
         });
 
         return await this.rep.save(sheet);
+    }
+
+    async unregisterSpreadsheet(spreadsheetId: string) {
+        await this.rep.delete({ spreadsheetId });
+    }
+
+    async getManyForTariff(tariffId: string): Promise<SheetEntity[]> {
+        return await this.rep.getMany({ tariffId });
     }
 
     private buildDataRow<T extends Record<string, any>>(schema: z.ZodObject<any>, data: T): string[] {
@@ -341,4 +340,4 @@ class SheetService {
     }
 }
 
-export const sheetService = new SheetService(sheetRepository, sheets, env.SHEET_NAME, tariffService);
+export const sheetService = new SheetService(sheetRepository, sheets, env.SHEET_NAME);

@@ -1,8 +1,11 @@
-import { warehouseService, WarehouseService } from "#modules/warehouse/service.js";
-import { wbApiService, WbApiService } from "#modules/wbApi/service.js";
-import { TariffEntity } from "./entity.js";
-import { tariffRepository, TariffRepository } from "./repository.js";
+import type { TariffRepository } from "./repository.js";
+import type { WbApiService } from "#modules/wbApi/service.js";
+import type { WarehouseService } from "#modules/warehouse/service.js";
+import type { TariffEntity } from "./entity.js";
+import { tariffRepository } from "./repository.js";
 import { Tariff } from "./schema.js";
+import { warehouseService } from "#modules/warehouse/service.js";
+import { wbApiService } from "#modules/wbApi/service.js";
 
 export class TariffService {
     constructor(
@@ -23,9 +26,7 @@ export class TariffService {
     }
 
     async process(data: Tariff, fetchDate: Date): Promise<TariffEntity> {
-        const existingTariff = await this.rep.getOneWithWarehouses({
-            fetchDate: fetchDate,
-        });
+        const existingTariff = await this.rep.getOneWithWarehouses({ fetchDate });
         if (!existingTariff) {
             console.log(`No existing tariff for ${fetchDate}. Creating new one...`);
             return await this.createWithWarehouses(data, fetchDate);
@@ -34,28 +35,21 @@ export class TariffService {
         existingTariff.dtNextBox = data.dtNextBox;
         existingTariff.dtTillMax = data.dtTillMax;
         existingTariff.fetchDate = fetchDate;
-        const updatedTariff = await this.rep.save(existingTariff);
+        await this.rep.save(existingTariff);
 
-        updatedTariff.warehouses = await this.warehouseService.processForTariff(
-            updatedTariff.id,
+        existingTariff.warehouses = await this.warehouseService.processForTariff(
+            existingTariff.id,
             existingTariff.warehouses ?? [],
             data.warehouseList,
         );
 
-        return updatedTariff;
+        return existingTariff;
     }
 
     async getOneById(tariffId: string): Promise<TariffEntity> {
         const tariff = await this.rep.getOneWithWarehouses({ id: tariffId });
         if (!tariff) throw new Error(`Tariff ${tariffId} not found`);
         return tariff;
-    }
-
-    async getOneByFetchDate(fetchDate: Date): Promise<TariffEntity> {
-        const tariff = await this.rep.getOneWithWarehouses({ fetchDate });
-        if (tariff) return tariff;
-
-        return await this.createForDate(fetchDate);
     }
 
     async getOneAndUpdateByFetchDate(fetchDate?: Date): Promise<TariffEntity> {
